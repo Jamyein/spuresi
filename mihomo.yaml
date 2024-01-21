@@ -1,0 +1,259 @@
+port: 7890 # HTTP(S) 代理服务器端口
+socks-port: 7891 # SOCKS5 代理端口
+mixed-port: 10801 # HTTP(S) 和 SOCKS 代理混合端口
+redir-port: 9797 # 透明代理端口，用于 Linux 和 MacOS
+tproxy-port: 9898
+
+# rule 规则匹配
+# global 全局代理(需要在GLOBAL策略组选择代理/策略)
+# direct 全局直连
+# 此项拥有默认值，默认为规则模式
+mode: rule
+allow-lan: true
+# unified-delay: true
+bind-address: '*'
+
+# silent 静默，不输出
+# error 仅输出发生错误至无法使用的日志
+# warning 输出发生错误但不影响运行的日志，以及 error 级别内容
+# info 输出一般运行的内容，以及 error 和 warning 级别的日志
+# debug 尽可能的输出运行中所有的信息
+log-level: info
+ipv6: false
+
+# 更改geoip使用文件,mmdb或者dat,true为dat
+geodata-mode: true
+
+# 可选的加载模式如下
+# standard：标准加载器
+# memconservative：专为内存受限(小内存)设备优化的加载器(默认值)
+geodata-loader: memconservative
+
+external-controller: 0.0.0.0:9090 
+# secret: "123456"
+external-ui: /data/adb/box/clash/ui
+# tcp-concurrent: false
+
+# 目前仅用于 API 的 https
+# tls:
+  # certificate: string # 证书 PEM 格式，或者 证书的路径
+  # private-key: string # 证书对应的私钥 PEM 格式，或者私钥路径
+
+# 全局 TLS 指纹，优先低于 proxy 内的 client-fingerprint。
+# 目前支持开启 TLS 传输的 TCP/grpc/WS/HTTP , 支持协议有 VLESS,Vmess 和 trojan.
+# global-client-fingerprint: chrome
+# Note:
+# 可选："chrome", "firefox", "safari", "iOS", "android", "edge", "360"," qq", "random"
+# 若选择 "random", 则按 Cloudflare Radar 数据按概率生成一个现代浏览器指纹。
+
+geox-url:
+  geoip: "https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geoip-lite.dat"
+  geosite: "https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/geosite.dat"
+  mmdb: "https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/country-lite.mmdb"
+
+geo-auto-update: true # 是否自动更新 geodata
+geo-update-interval: 24 # 更新间隔，单位：小时
+
+# 控制是否让 Clash 去匹配进程
+# always 开启，强制匹配所有进程
+# strict 默认，由 Clash 判断是否开启
+# off 不匹配进程，推荐在路由器上使用此模式
+find-process-mode: strict
+
+keep-alive-interval: 30
+
+profile:
+  store-selected: true
+  # 储存 API 对策略组的选择，以供下次启动时使用
+  store-fake-ip: true
+  # 储存 fakeip 映射表，域名再次发生连接时，使用原有映射地址
+
+
+sniffer:
+  enable: true
+  sniff:
+    HTTP:
+      ports: [80, 8080-8880]
+      # override-destination: true
+    TLS:
+      ports: [443, 8443]
+#    QUIC:
+#      ports: [443, 8443]
+  skip-domain:
+    - "Mijia Cloud"
+
+tun:
+  enable: false
+  device: utun
+  mtu: 9000
+  stack: system # gvisor / lwip / system
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  auto-route: true
+  auto-detect-interface: true
+  # include_android_user:
+    # - 0
+    # - 10
+  # include_package:
+  # - com.android.chrome
+  # exclude_package:
+    # - com.whatsapp
+
+# DNS配置
+dns:
+  enable: true
+  listen: 0.0.0.0:1053
+  ipv6: false
+  enhanced-mode: fake-ip 
+  fake-ip-range: 28.0.0.1/8 
+  fake-ip-filter:
+    - "+.lan"
+    - "+.local"
+  default-nameserver:
+    - "https://120.53.53.53/dns-query"
+  proxy-server-nameserver:
+    - "https://223.5.5.5/dns-query"
+  nameserver:
+    - "https://1.0.0.1/dns-query#Dns"
+  nameserver-policy:
+    "geosite:cn":
+      - "https://120.53.53.53/dns-query"
+
+# hosts:
+  # # block update system android
+  # 'ota.googlezip.net': 127.0.0.1
+  # 'ota-cache1.googlezip.net': 127.0.0.1
+  # 'ota-cache2.googlezip.net': 127.0.0.1
+
+pr: &pr {type: select, proxies: [🚀 节点选择,♻️ 自动选择,🇭🇰 香港节点,🇨🇳 台湾节点,🇸🇬 狮城节点,🇯🇵 日本节点,🇺🇲 美国节点, 其它地区, DIRECT]}
+
+p: &p {type: http, interval: 3600, health-check: {enable: true, url: https://www.gstatic.com/generate_204, interval: 600}}
+
+
+
+proxies:
+
+# 代理提供(订阅)组
+#添加/修改机场(名)请保证proxy-providers名称和proxy-groups同步添加/修改
+proxy-providers:
+
+  1: #机场名
+    url: ""
+    path: ./provide/1.yaml #保存路径
+    <<: *p
+  
+  2: #机场名
+    url: ""
+    path: ./provide/2.yaml #保存路径
+    <<: *p
+    
+proxy-groups:
+  - {name: 🚀 节点选择, type: select, proxies: [♻️ 自动选择,🇭🇰 香港节点,🇨🇳 台湾节点,🇸🇬 狮城节点,🇯🇵 日本节点,🇺🇲 美国节点, 其它地区, DIRECT]}
+  - {name: ♻️ 自动选择, include-all-providers: true, tolerance: 2, type: url-test}
+  - {name: 🌍 国外媒体, <<: *pr}
+  - {name: 🌏 国内媒体, type: select, proxies: [DIRECT,🇭🇰 香港节点,🇨🇳 台湾节点,🇸🇬 狮城节点,🇯🇵 日本节点]}
+  - {name: 📲 电报信息, <<: *pr}
+  - {name: Ⓜ️ 微软服务, <<: *pr}
+  - {name: 🍎 苹果服务, <<: *pr}
+  - {name: 📢 谷歌FCM, <<: *pr}
+  - {name: 💬 OpenAi, <<: *pr}
+  - {name: 🎯 全球直连, type: select, proxies: [DIRECT,🇭🇰 香港节点,🇨🇳 台湾节点,🇸🇬 狮城节点,🇯🇵 日本节点]}
+  - {name: 🐟 漏网之鱼, <<: *pr}
+
+#分隔,下面是地区分组
+  
+  - {name: 🇭🇰 香港节点, type: select, include-all-providers: true, filter: "(?i)港|HK|hk|Hong Kong|HongKong|hongkong"}
+  - {name: 🇨🇳 台湾节点, type: url-test, lazy: true, tolerance: 10, include-all-providers: true, filter: "(?i)台|新北|彰化|TW|Taiwan"}
+  - {name: 🇯🇵 日本节点, type: url-test, lazy: true, tolerance: 10, include-all-providers: true, filter: "(?i)日本|川日|东京|大阪|泉日|埼玉|沪日|深日|[^-]日|JP|Japan"}
+  - {name: 🇺🇲 美国节点, type: url-test, lazy: true, tolerance: 10, include-all-providers: true, filter: "(?i)美|波特兰|达拉斯|俄勒冈|凤凰城|费利蒙|硅谷|拉斯维加斯|洛杉矶|圣何塞|圣克拉拉|西雅图|芝加哥|US|United States"}
+  - {name: 🇸🇬 狮城节点, type: url-test, lazy: true, tolerance: 10, include-all-providers: true, filter: "(?i)新加坡|坡|狮城|SG|Singapore"}
+  - {name: 其它地区, type: url-test, lazy: true, tolerance: 10, include-all-providers: true, filter: "(?i)^(?!.*(?:🇭🇰|🇯🇵|🇺🇸|🇸🇬|🇨🇳|港|hk|hongkong|台|tw|taiwan|日|jp|japan|新|sg|singapore|美|us|unitedstates)).*"}
+
+
+rule-providers:
+  block:
+    type: http
+    behavior: domain
+    url: "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt"
+    path: ./ruleset/block.yaml
+    interval: 86400
+      
+rules:
+  ## block ads
+  - DOMAIN-SUFFIX,googlesyndication.com,🚀 节点选择
+  - AND,((GEOSITE,category-ads-all),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),REJECT
+  - GEOSITE,category-ads-all,REJECT
+  - RULE-SET,block,REJECT
+  
+  # 微信小程序去广告通用规则
+  - DOMAIN, wxsnsdy.wxs.qq.com, REJECT
+  - DOMAIN, wxsmsdy.video.qq.com, REJECT
+  - DOMAIN, wxsnsdythumb.wxs.qq.com, REJECT
+
+# 收钱吧 - 买单小程序去广告
+  - DOMAIN, ads-shopping.shouqianba.com, REJECT
+  
+  #猫眼电影
+  - DOMAIN, ad.maoyan.com, REJECT
+
+# 七麦
+  - DOMAIN,logger.qmai.cn, REJECT
+  
+  # 淘宝广告
+  - DOMAIN, adashx.m.taobao.com, REJECT
+  - DOMAIN, ossgw.alicdn.com, REJECT
+  - DOMAIN, ems.youku.com, REJECT
+  - DOMAIN, hudong.alicdn.com, REJECT
+  - DOMAIN, h-adashx.ut.taobao.com, REJECT
+  - DOMAIN, ut.taobao.com, REJECT
+  
+  # 京东广告
+  - DOMAIN, dns.jd.com, REJECT
+  - IP-CIDR, 101.124.19.122/32, REJECT, no-resolve
+  - IP-CIDR6, 2402:db40:5100:1011::5/128, REJECT, no-resolve
+  
+  
+  ## direct FCM
+  - AND,((NETWORK,TCP),(DST-PORT,5228-5230)),DIRECT
+  - AND,((NETWORK,TCP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),DIRECT
+
+  ## block udp/quic YouTube
+  - AND,((NETWORK,udp),(OR,((DST-PORT,443/80),(GEOSITE,youtube)))),REJECT
+  - AND,((NETWORK,udp),(GEOSITE,youtube)),REJECT
+
+  # # fix dnsleak
+  #
+  - IP-CIDR,127.0.0.1/32,REJECT,no-resolve
+  - IP-CIDR,198.18.0.1/16,REJECT,no-resolve
+  - IP-CIDR,28.0.0.1/8,REJECT,no-resolve
+  - IP-CIDR6,::1/128,REJECT,no-resolve
+
+  - AND,((NETWORK,UDP),(OR,((DST-PORT,12345),(DST-PORT,443),(DOMAIN-KEYWORD,bilibili),(DOMAIN-KEYWORD,mcdn)))),REJECT
+
+  - AND,((NETWORK,TCP),(DOMAIN-KEYWORD,stun),(OR,((DOMAIN-KEYWORD,douyu),(DOMAIN-KEYWORD,bilibili)))),REJECT
+
+  # openai
+  - GEOSITE,openai,💬 OpenAi
+  - GEOSITE,category-porn,REJECT
+  - GEOIP,lan,DIRECT,no-resolve
+  - GEOSITE,github,🌍 国外媒体
+  - GEOSITE,twitter,🌍 国外媒体
+  - GEOSITE,youtube,🌍 国外媒体
+  - GEOSITE,google,🌍 国外媒体
+  - GEOSITE,spotify,🌍 国外媒体
+  - GEOSITE,pixiv,🌍 国外媒体
+  - GEOSITE,telegram,📲 电报信息
+  - GEOSITE,apple,🍎 苹果服务
+  - GEOSITE,bilibili,🌏 国内媒体
+  - GEOSITE,googlefcm,📢 谷歌FCM,no-resolve
+  - GEOSITE,microsoft,Ⓜ️ 微软服务
+  - GEOSITE,geolocation-!cn,🐟 漏网之鱼
+  
+
+  - GEOIP,google,🌍 国外媒体
+  - GEOIP,telegram,📲 电报信息
+  - GEOIP,twitter,🌍 国外媒体
+  - GEOSITE,cn,🎯 全球直连
+  - GEOIP,CN,🎯 全球直连
+  - MATCH,🐟 漏网之鱼
